@@ -1,0 +1,7 @@
+image:
+  registry: 962734494488.dkr.ecr.us-west-2.amazonaws.com
+  pullPolicy: Always
+  imageName: "common/alpine"
+  imageTag: 3.17
+
+
