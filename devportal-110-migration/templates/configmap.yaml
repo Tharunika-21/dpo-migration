@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dpo-migration-config
+data:
+  vars.sh: |
+{{ tpl ($.Files.Get (printf "files/vars.sh") ) $ | indent 4 }}
+  config.json: |
+{{ tpl ($.Files.Get (printf "files/config.json") ) $ | indent 4 }}
+  main.sh: |
+{{ tpl ($.Files.Get (printf "files/main.sh") ) $ | indent 4 }}
+  tenantMigration.sh: |
+{{ tpl ($.Files.Get (printf "files/tenantMigration.sh") ) $ | indent 4 }}
+  mapping: |
+{{ tpl ($.Files.Get (printf "files/mapping") ) $ | indent 4 }}
