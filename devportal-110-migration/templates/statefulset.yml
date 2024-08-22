@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: dpo-migration-sts
+  labels:
+    app.kubernetes.io/name: dpo-migration-sts
+spec:
+  serviceName: dpo-migration-svc
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dpo-migration-sts
+  replicas: 1
+  volumeClaimTemplates:
+  - metadata:
+      name: migration-logs
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: devportal-block-storage
+  template:
+    metadata:
+      annotations:
+        sensor.falcon-system.crowdstrike.com/injection: disabled
+      labels:
+        app.kubernetes.io/name: dpo-jobs
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                   - dpo-migration-sts
+              topologyKey: "kubernetes.io/hostname"
+      restartPolicy: Always
+      containers:
+      - name: dpo-migration-sts
+        image: {{ $.Values.image.registry }}/{{ $.Values.image.imageName }}:{{ $.Values.image.imageTag }}
+        imagePullPolicy: {{ $.Values.image.pullPolicy }}
+        command: ["/bin/bash"]
+        args: ["-c","cd /opt/softwareag && apk add bash jq && tail -f /dev/null"]
+        securityContext:
+          runAsUser: 0
+          privileged: true
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 50Mi
+        volumeMounts:
+        - mountPath: /opt/softwareag/data/
+          name: migration-logs
+        - mountPath: /opt/softwareag/
+          name: migration-scripts
+      volumes:
+      - name: migration-scripts
+        configMap:
+          defaultMode: 420
+          name: dpo-migration-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dpo-migration-svc
+spec:
+  clusterIP: None
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080

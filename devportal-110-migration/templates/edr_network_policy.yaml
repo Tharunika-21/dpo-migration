@@ -1,0 +1,45 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dpo-migration-netpol
+  namespace: api-shared
+spec:
+  podSelector:
+    matchLabels:
+      app: api-es-master
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: dpo-paid
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dpo-110-migration
+    ports:
+    - port: 9240
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dpo-migration-netpol-edr
+  namespace: dpo-paid
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: dpo-110-migration
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: api-shared
+    - podSelector:
+        matchLabels:
+          app: api-es-master
+    ports:
+    - port: 9240
+      protocol: TCP

@@ -1,0 +1,126 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: migration-netpol
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: dpo-110-migration
+  policyTypes:
+    - Egress
+  egress:
+    - ports:
+      - port: 25
+        protocol: TCP
+      - port: 587
+        protocol: TCP
+      - port: 465
+        protocol: TCP
+      to:
+      - ipBlock:
+          cidr: 0.0.0.0/0
+    - ports:
+      - port: 3306
+        protocol: TCP
+      - port: 9200
+        protocol: TCP
+      - port: 443
+        protocol: TCP
+      to:
+      - ipBlock:
+          cidr: 0.0.0.0/0
+    - ports:
+      - port: 9200
+        protocol: TCP
+      - port: 9300
+        protocol: TCP
+      to:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: dpo-paid
+        podSelector:
+          matchLabels:
+            chart: elasticsearch
+    - ports:
+      - port: 9240
+        protocol: TCP
+      to:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: api-shared
+        podSelector:
+          matchLabels:
+            chart: elasticsearch
+    - ports:
+      - port: 8080
+        protocol: TCP
+      to:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: dpo-paid
+        podSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - portalbundle
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: devportal
+        podSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - devportal-tms
+            - dpo-tenant-manager
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: elasticsearch-migration-netpol
+spec:
+  podSelector:
+    matchLabels:
+      chart: elasticsearch
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: dpo-paid
+        podSelector:
+          matchLabels:
+            app.kubernetes.io/name: dpo-110-migration
+      ports:
+      - port: 9200
+        protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: portalbundle-migration-netpol
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: portalbundle
+      app.kubernetes.io/product: dpo
+      app.kubernetes.io/part-of: wm-dpo
+      app.kubernetes.io/component: "ctp"
+      app.kubernetes.io/subproduct: dpo
+      softwareag.com/tenantname: shared
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: dpo-paid
+        podSelector:
+          matchLabels:
+            app.kubernetes.io/name: dpo-110-migration
+      ports:
+      - port: 8080
+        protocol: TCP
