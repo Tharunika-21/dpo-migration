@@ -1,0 +1,15 @@
+{
+   "config": {
+   "tenantConfig": {
+      "OAUTH_AUTHORIZATION_ENDPOINT": "IDM_PREFIX/TENANTNAME/protocol/openid-connect/auth",
+      "OAUTH_ACCESS_TOKEN_ENDPOINT": "IDM_PREFIX/TENANTNAME/protocol/openid-connect/token",
+      "OAUTH_USERINFO_ENDPOINT": "IDM_PREFIX/TENANTNAME/protocol/openid-connect/userinfo",
+      "LOADBALANCER_URL": "https://FQDN/portal",
+      "PROVIDER": "aws",
+      "COUNTRY_NAME": "India",
+      "PLAN": "TIER",
+      "COMPANY_NAME": "Software AG Internal",
+      "REGION": "aw-us"
+   }
+}
+}
